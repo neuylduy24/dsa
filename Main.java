@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -11,16 +12,18 @@ class Student {
         this.studentId = studentId;
         this.fullName = fullName;
         this.score = score;
-    }
+    }   
 
     public String getStudentId() {
         return studentId;
+    }
+    public void setStudentId(String studentId){
+        this.studentId = studentId;
     }
 
     public String getFullName() {
         return fullName;
     }
-
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
@@ -28,10 +31,10 @@ class Student {
     public double getScore() {
         return score;
     }
-
     public void setScore(double score) {
         this.score = score;
     }
+    
 
     public String getRanking() {
         if (score >= 0 && score < 5.0) {
@@ -44,9 +47,10 @@ class Student {
             return "Very Good";
         } else if (score >= 9.0 && score <= 10.0) {
             return "Excellent";
-        } else {
-            return "Invalid Score";
         }
+        else{
+            return "Invalid Score";
+        }   
     }
 
     @Override
@@ -54,6 +58,7 @@ class Student {
         return "ID: " + studentId + ", Name: " + fullName + ", Score: " + score + ", Rank: " + getRanking();
     }
 }
+
 class StudentManagement {
     private List<Student> students;
 
@@ -93,25 +98,26 @@ class StudentManagement {
         return null;
     }
 
-    public void sortStudentsByScore(boolean descending) {
+    public void bubbleSortStudentsByScore(boolean descending) {
         int n = students.size();
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
-                // Compare adjacent elements based on the sorting order
-                boolean compare = descending ? 
-                    students.get(j).getScore() < students.get(j + 1).getScore() : 
-                    students.get(j).getScore() > students.get(j + 1).getScore();
-    
-                if (compare) {
-                    // Swap if elements are in the wrong order
-                    Student temp = students.get(j);
-                    students.set(j, students.get(j + 1));
-                    students.set(j + 1, temp);
+                if (descending) { 
+                    if (students.get(j).getScore() < students.get(j + 1).getScore()) {
+                        Collections.swap(students, j, j + 1);
+                    }
+                } else {
+                    if (students.get(j).getScore() > students.get(j + 1).getScore()) {
+                        Collections.swap(students, j, j + 1);
+                    }
                 }
             }
         }
     }
 
+    public boolean isEmpty() {
+        return students.isEmpty();
+    }
     public void displayStudents() {
         for (Student student : students) {
             System.out.println(student);
@@ -135,59 +141,190 @@ public class Main {
             System.out.println("7. Exit");
             System.out.print("Choose an option: ");
 
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                switch (choice) {
+                    case 1:
+                        try {
+                            String studentId;
+                            while (true) {
+                                System.out.print("Enter Student ID: ");
+                                studentId = scanner.nextLine().trim();
+                                if (!studentId.matches("^[a-zA-Z0-9]+$")) {
+                                    System.out.println("Invalid ID. Please use only letters and numbers.");
+                                } else if(studentId.isEmpty()){
+                                    System.out.println("Id cannot be empty.");
+                                } else if (management.searchStudent(studentId) != null) {
+                                    System.out.println("Student ID already exists. Please use a different ID."); 
+                                } else {
+                                    break;
+                                }
+                            }
+                            System.out.print("Enter Student Name: ");
+                            String fullName = scanner.nextLine();
+                            System.out.print("Enter Student Score: ");
+                            double score;
+                            while (true) {
+                                System.out.print("Enter Student Score (0-10): ");
+                                score = scanner.nextDouble();
+                                if (score >= 0 && score <= 10) {
+                                    break;
+                                } else {
+                                    System.out.println("Invalid score. Please enter a value between 0 and 10.");
+                                }
+                            }
+                            management.addStudent(studentId, fullName, score);
+                            System.out.println("Add student successfully.");
+                        } catch (Exception e) {
+                            System.out.println("Invalid input. Please enter a valid score.");
+                            scanner.nextLine(); // Clear invalid input
+                        }
+                        break;
 
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter Student ID: ");
-                    String studentId = scanner.nextLine();
-                    System.out.print("Enter Student Name: ");
-                    String fullName = scanner.nextLine();
-                    System.out.print("Enter Student Score: ");
-                    double score = scanner.nextDouble();
-                    management.addStudent(studentId, fullName, score);
-                    break;
-                case 2:
-                    System.out.print("Enter Student ID to Edit: ");
-                    studentId = scanner.nextLine();
-                    System.out.print("Enter New Name (leave blank to keep current): ");
-                    String newName = scanner.nextLine();
-                    System.out.print("Enter New Score (leave blank to keep current): ");
-                    String newScoreInput = scanner.nextLine();
-                    Double newScore = newScoreInput.isEmpty() ? null : Double.parseDouble(newScoreInput);
-                    management.editStudent(studentId, newName.isEmpty() ? null : newName, newScore);
-                    break;
-                case 3:
-                    System.out.print("Enter Student ID to Delete: ");
-                    studentId = scanner.nextLine();
-                    management.deleteStudent(studentId);
-                    break;
-                case 4:
-                    System.out.print("Enter Student ID to Search: ");
-                    studentId = scanner.nextLine();
-                    Student student = management.searchStudent(studentId);
-                    if (student != null) {
-                        System.out.println(student);
-                    } else {
-                        System.out.println("Student not found.");
-                    }
-                    break;
-                case 5:
-                    System.out.print("Sort in descending order? (yes/no): ");
-                    boolean descending = scanner.nextLine().equalsIgnoreCase("yes");
-                    management.sortStudentsByScore(descending);
-                    break;
-                case 6:
-                    management.displayStudents();
-                    break;
-                case 7:
-                    System.out.println("Exiting...");
-                    scanner.close();
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+                        case 2:
+                        try {
+                            String studentId;
+                            while (true) {
+                                System.out.print("Enter Student ID to Edit: ");
+                                studentId = scanner.nextLine().trim();
+                                if (studentId.matches("^[a-zA-Z0-9]+$")) {
+                                    break;
+                                } else {
+                                    System.out.println("Invalid ID. Please use only letters and numbers.");
+                                }
+                            }
+                            Student student = management.searchStudent(studentId);
+                            if (student == null) {
+                                System.out.println("Student with ID " + studentId + " not found. Exiting edit.");
+                                break; 
+                            }
+                            System.out.print("Enter New Name (leave blank to keep current): ");
+                            String newName = scanner.nextLine();
+                            String newScoreInput;
+                            Double newScore = null;                  
+                            while (true) {
+                                System.out.print("Enter New Score (0-10, leave blank to keep current): ");
+                                newScoreInput = scanner.nextLine();
+                                if (newScoreInput.isEmpty()) {
+                                    break;
+                                }
+                                try {
+                                    newScore = Double.parseDouble(newScoreInput);
+                                    if (newScore >= 0 && newScore <= 10) {
+                                        break;
+                                    } else {
+                                        System.out.println("Invalid score. Please enter a value between 0 and 10.");
+                                    }
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid score format. Please enter a valid number.");
+                                }
+                            }
+                            management.editStudent(studentId, newName.isEmpty() ? null : newName, newScore);
+                            System.out.println("Student updated successfully.");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid score format. Please enter a valid number.");
+                        }
+                        break;                    
+
+                    case 3:
+                        try {
+                            String studentId;
+                            while (true) {
+                                System.out.print("Enter Student ID to Delete: ");
+                                studentId = scanner.nextLine();
+                                if (studentId.matches("^[a-zA-Z0-9]+$")) {
+                                    break;
+                                } else {
+                                    System.out.println("Invalid ID. Please use only letters and numbers.");
+                                }
+                            }
+                            Student student = management.searchStudent(studentId);
+                            if (student == null) {
+                                System.out.println("Student with ID " + studentId + " not found. Exiting delete.");
+                                break;
+                            }
+                            management.deleteStudent(studentId);
+                            System.out.println("Student deleted successfully.");
+                        } catch (Exception e) {
+                            System.out.println("An error occurred while deleting the student: " + e.getMessage());
+                        }
+                        break;
+
+                    case 4:
+                        try {
+                            String studentId;
+                            while (true) {
+                                System.out.print("Enter Student ID to Search: ");
+                                studentId = scanner.nextLine();
+                                if (studentId.matches("^[a-zA-Z0-9]+$")) {
+                                    break;
+                                } else {
+                                    System.out.println("Invalid ID. Please use only letters and numbers.");
+                                }
+                            }
+                            Student student = management.searchStudent(studentId);
+                            if (student != null) {
+                                System.out.println(student);
+                            } else {
+                                System.out.println("Student not found.");
+                            }
+                        } catch (Exception e) {
+                            System.out.println("An error occurred while searching for the student: " + e.getMessage());
+                        }
+                        break;
+
+                    case 5:
+                        try {
+                            System.out.println("1. Sort in ascending order");
+                            System.out.println("2. Sort in descending order");
+                            System.out.print("Choose an option: ");
+                            int sortChoice = scanner.nextInt();
+                            scanner.nextLine(); // Consume newline
+
+                            if (sortChoice == 1) {
+                                management.bubbleSortStudentsByScore(false);
+                                System.out.println("Students sorted in ascending order:");
+                            } else if (sortChoice == 2) {
+                                management.bubbleSortStudentsByScore(true);
+                                System.out.println("Students sorted in descending order:");
+                            } else {
+                                System.out.println("Invalid choice. Please try again.");
+                            }
+
+                            management.displayStudents();
+                        } catch (Exception e) {
+                            System.out.println("Invalid input. Please choose 1 or 2.");
+                            scanner.nextLine(); // Clear invalid input
+                        }
+                        break;
+
+                    case 6:
+                        try {
+                            if (management.isEmpty()) {
+                                System.out.println("No students to display.");
+                            } else {
+                                management.displayStudents();
+                            }
+                        } catch (Exception e) {
+                            System.out.println("An error occurred while displaying students: " + e.getMessage());
+                        }
+                        break;
+
+                    case 7:
+                        System.out.println("Exiting...");
+                        scanner.close();
+                        return;
+
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a number between 1 and 7.");
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
 }
+
+
